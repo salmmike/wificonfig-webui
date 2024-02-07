@@ -1,0 +1,101 @@
+#!/bin/bash
+print_usage () {
+    echo "Create an open wifi accesspoint."
+    echo
+    echo "create-ap-interface <iw object> <iw object name> <interface name> <ip> <apname> --passwd <PASSWORD> --generate-passwd"
+    echo "e.g. create-ap-interface phy phy0 testnetwork 192.168.26.1 wificonfig"
+    echo "the IP of the network should end with .1"
+}
+
+ARGC=$#
+if [ $ARGC -lt 5 ]; then
+    print_usage
+    exit 1
+fi
+
+IW_OBJECT=$1
+IW_NAME=$2
+IF_NAME=$3
+IP_ADDR=$4
+HOTSPOT=$5
+GENERATE_PASSWORD=false
+PASSWD=false
+TMP_PASSWDFILE=/tmp/wificonfig-passwd
+
+
+for (( i=2; i <= "$#"; i++ )); do
+    VAR=${!i}
+
+    if [ "${VAR}" = "--generate-passwd" ]; then
+        GENERATE_PASSWORD=true
+    elif [ "${VAR}" = "--passwd" ]; then
+        PASSINDEX=$((i+1))
+        PASSWD=${!PASSINDEX}
+    fi
+
+done
+HOSTAPD_CONFIG="/tmp/wificonfig-hostapd.conf"
+UDHCPD_CONFIG="/tmp/wificonfig-udhcpd.conf"
+
+
+if [ "${IP_ADDR#*.*.*.*}" != "1" ]; then
+    echo "Faulty IP ${IP_ADDR}"
+    print_usage
+    exit 1
+fi
+
+IFCONFIG_STR=$(ifconfig -a "${IF_NAME}")
+
+if echo -e "${IFCONFIG_STR}" | grep -q "UP"; then
+    echo "Network ${IF_NAME} already found"
+elif echo -e "${IFCONFIG_STR}" | grep -q "DOWN"; then
+    ifconfig "${IF_NAME}" "${IP_ADDR}" up | exit 1
+else
+    iw "${IW_OBJECT}" "${IW_NAME}" interface add "${IF_NAME}" type __ap | exit 1
+    ifconfig "${IF_NAME}" "${IP_ADDR}" up | exit 1
+fi
+
+cat << EOL > $HOSTAPD_CONFIG
+interface=${IF_NAME}
+driver=nl80211
+ssid=${HOTSPOT}
+channel=7
+hw_mode=g
+wme_enabled=1
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+max_num_sta=1
+EOL
+
+
+if $GENERATE_PASSWORD; then
+    PASSWD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13; echo)
+    echo "${PASSWD}" > "${TMP_PASSWDFILE}"
+fi
+
+if [ "${PASSWD}" != false ]; then
+    exit 1
+    echo "wpa=3" >> $HOSTAPD_CONFIG
+    echo "wpa_passphrase=${PASSWD}" >> $HOSTAPD_CONFIG
+    echo "wpa_pairwise=TKIP" >> $HOSTAPD_CONFIG
+    echo "rsn_pairwise=CCMP" >> $HOSTAPD_CONFIG
+else
+    echo "wpa=0" >> $HOSTAPD_CONFIG
+fi
+
+
+cat << EOL > $UDHCPD_CONFIG
+start ${IP_ADDR%.*}.2
+end ${IP_ADDR%.*}.254
+
+interface ${IF_NAME}
+
+opt dns 8.8.8.8 8.8.4.4 
+option subnet 255.255.255.0 
+option domain local 
+option lease 3600
+EOL
+
+hostapd "${HOSTAPD_CONFIG}" | exit 1
+udhcpd -f "${UDHCPD_CONFIG}" | exit 1

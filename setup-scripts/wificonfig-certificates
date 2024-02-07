@@ -1,0 +1,31 @@
+#!/bin/bash
+
+print_usage () {
+    echo "Create certificates for wificonfigurator"
+    echo
+    echo "Checks path /etc/wificonfigurator/ca.crt and /etc/wificonfigurator/ca.key"
+    echo "If the files don't exist, creates self signed certificates."
+}
+
+if [[ $1 == "--help" ]] || [[ $1 == "-h" ]]; then
+    print_usage
+    exit 0
+fi
+
+PASSFILE=/tmp/wificonfigpass.txt
+FILENAME=uiwificonfigurator
+ROOTPATH=/etc/wificonfigurator.d/
+FILEPATH=${ROOTPATH}${FILENAME}
+
+if ! test -f ${FILEPATH}.key; then
+    mkdir -p ${ROOTPATH}
+
+    openssl rand -base64 48 > ${PASSFILE}
+    openssl genrsa -aes128 -passout file:${PASSFILE} -out ${FILEPATH}.key 2048
+    openssl req -new -passin file:${PASSFILE} -key ${FILEPATH}.key -out ${FILEPATH}.csr\
+        -subj "/C=UK/O=wificonf/OU=Domain Control Validated/CN=uiwificonfigurator.org"
+
+    openssl x509 -req -days 36500 -in ${FILEPATH}.csr -signkey ${FILEPATH}.key -out ${FILEPATH}.crt -passin file:${PASSFILE}
+
+    rm ${PASSFILE}
+fi
