@@ -17,15 +17,10 @@ FILENAME=uiwificonfigurator
 ROOTPATH=/etc/wificonfigurator.d/
 FILEPATH=${ROOTPATH}${FILENAME}
 
-if ! test -f ${FILEPATH}.key; then
+if ! test -f ${FILEPATH}key.pem; then
     mkdir -p ${ROOTPATH}
 
-    openssl rand -base64 48 > ${PASSFILE}
-    openssl genrsa -aes128 -passout file:${PASSFILE} -out ${FILEPATH}.key 2048
-    openssl req -new -passin file:${PASSFILE} -key ${FILEPATH}.key -out ${FILEPATH}.csr\
-        -subj "/C=UK/O=wificonf/OU=Domain Control Validated/CN=uiwificonfigurator.org"
+    openssl req -x509 -newkey rsa:4096 -nodes -out ${ROOTPATH}cert.pem -keyout ${ROOTPATH}key.pem -days 365000\
+    -subj "/C=UK/O=wificonf/OU=Domain Control Validated/CN=uiwificonfigurator.org"
 
-    openssl x509 -req -days 36500 -in ${FILEPATH}.csr -signkey ${FILEPATH}.key -out ${FILEPATH}.crt -passin file:${PASSFILE}
-
-    rm ${PASSFILE}
 fi
