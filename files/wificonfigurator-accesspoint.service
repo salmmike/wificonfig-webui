@@ -1,0 +1,13 @@
+[Unit]
+Description=Create AP for Wi-Fi configuration
+After=network.target
+
+[Service]
+Type=simple
+Restart=no
+EnvironmentFile=/etc/wificonfigurator.conf
+ExecStart=/usr/bin/create-ap-interface ${IW_OBJ} ${IW_NAME} ${INTERFACE_NAME} ${IP} ${AP_NAME} ${PASSWD_OP} ${PASSWD} ${GENERATE_PASSWD}
+ConditionPathExists=!/etc/wificonfigurator.done
+
+[Install]
+WantedBy=multi-user.target
