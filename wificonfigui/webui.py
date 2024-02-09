@@ -63,7 +63,7 @@ def run(cert: str, key: str, http: bool):
     if http:
         app.run()
     else:
-        app.run(host="0.0.0.0", port=5000, ssl_context=(cert, key))
+        app.run(host="0.0.0.0", port=5001, ssl_context=(cert, key))
 
 
 def main():
