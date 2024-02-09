@@ -20,16 +20,26 @@ Author: Mike Salmela
 """
 
 import argparse
+import subprocess
 from flask import Flask, render_template, request, redirect, url_for
 
-import wifi
 
 app = Flask("wificonfigurator-webui")
 
 CERT_KEY = "/etc/wificonfigurator.d/key.pem"
 CERT_CRT = "/etc/wificonfigurator.d/cert.pem"
 
-usernames = [x.ssid for x in wifi.Cell.all("wlp0s20f3")]
+usernames = list(
+    filter(
+        None,
+        [
+            x.strip().split(": ")[1] if x.count("SSID") else None
+            for x in subprocess.check_output(
+                ["iw", "dev", "wlan0", "scan"], encoding="UTF-8"
+            ).split("\n")
+        ],
+    )
+)
 
 
 @app.route("/")
@@ -68,6 +78,7 @@ def main():
     args = vars(argparser.parse_args())
 
     run(args.get("certificate"), args.get("key"), args.get("http"))
+
 
 if __name__ == "__main__":
     main()
