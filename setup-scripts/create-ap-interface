@@ -97,5 +97,5 @@ option domain local
 option lease 3600
 EOL
 
-hostapd "${HOSTAPD_CONFIG}" | exit 1
+hostapd "${HOSTAPD_CONFIG}" &
 udhcpd -f "${UDHCPD_CONFIG}" | exit 1
