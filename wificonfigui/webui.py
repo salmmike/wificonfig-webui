@@ -22,6 +22,9 @@ Author: Mike Salmela
 import argparse
 import subprocess
 import pathlib
+import threading
+import sys
+import time
 from flask import Flask, render_template, request, redirect, url_for
 
 
@@ -73,12 +76,18 @@ class WificonfigWebUI:
         with open(self.wpa_supplicant_file, "w", encoding="utf-8") as configfile:
             configfile.write(template)
 
-    def connect_network(self, username: str, password: str) -> bool:
-        """Try conneting to a network."""
-        self._create_wpa_supplicant_config(username, password)
+    def _connect_network(self):
+        time.sleep(5)
         subprocess.run(["systemctl", "stop", "wificonfigurator-accesspoint"], check=False)
         subprocess.run(["systemctl", "stop", "wificonfigurator-webui"], check=False)
-        exit(0)
+        sys.exit(0)
+
+    def connect_network(self, username: str, password: str):
+        """Try connecting to a network."""
+        self._create_wpa_supplicant_config(username, password)
+        configthread = threading.Thread(target=self._connect_network)
+        configthread.start()
+
 
     def make_app(self):
         """Create the Flask app"""
@@ -95,7 +104,8 @@ class WificonfigWebUI:
             if request.method == "POST":
                 username = request.form["username"]
                 password = request.form["password"]
-                return self.connect_network(username, password)
+                self.connect_network(username, password)
+                return render_template("connecting.html")
             return render_template("login.html", usernames=usernames)
 
         self._app = app

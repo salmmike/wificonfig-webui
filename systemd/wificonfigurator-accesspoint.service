@@ -8,6 +8,7 @@ Type=simple
 Restart=no
 EnvironmentFile=/etc/wificonfigurator.conf
 ExecStart=/usr/bin/create-ap-interface ${IW_OBJ} ${IW_NAME} ${INTERFACE_NAME} ${IP} ${AP_NAME} ${PASSWD_OP} ${PASSWD} ${GENERATE_PASSWD}
+ExecStopPost=/usr/bin/create-ap-interface stop ${INTERFACE_NAME}
 
 [Install]
 WantedBy=multi-user.target

@@ -7,6 +7,15 @@ print_usage () {
     echo "the IP of the network should end with .1"
 }
 
+if [ "${1}" = "stop" ]; then
+    echo STOPPING CREATE AP INTERFACE
+    ifconfig $2 down
+    echo STOPPING CREATE AP INTERFACE $?
+    iw dev $2 del
+    echo STOPPING CREATE AP INTERFACE $?
+    exit 0
+fi
+
 ARGC=$#
 if [ $ARGC -lt 5 ]; then
     print_usage
