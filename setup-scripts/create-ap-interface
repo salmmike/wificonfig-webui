@@ -7,13 +7,17 @@ print_usage () {
     echo "the IP of the network should end with .1"
 }
 
-if [ "${1}" = "stop" ]; then
-    echo STOPPING CREATE AP INTERFACE
-    ifconfig $2 down
-    echo STOPPING CREATE AP INTERFACE $?
-    iw dev $2 del
-    echo STOPPING CREATE AP INTERFACE $?
+stop_ap () {
+    INTERFACE=$1
+    echo "STOPPING INTERFACE ${INTERFACE}"
+    ifconfig $INTERFACE down
+    iw dev $INTERFACE del
     exit 0
+}
+
+
+if [ "${1}" = "stop" ]; then
+    stop_ap $2
 fi
 
 ARGC=$#
@@ -43,6 +47,7 @@ for (( i=2; i <= "$#"; i++ )); do
     fi
 
 done
+
 HOSTAPD_CONFIG="/tmp/wificonfig-hostapd.conf"
 UDHCPD_CONFIG="/tmp/wificonfig-udhcpd.conf"
 
