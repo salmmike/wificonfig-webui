@@ -9,7 +9,6 @@ Restart=on-failure
 EnvironmentFile=/etc/wificonfigurator.conf
 ExecStartPre=/usr/bin/wificonfig-certificates
 ExecStart=wificonfigui --wpa-template ${WPA_SUPPLICANT_TEMPLATE} --wifi-interface ${WIFI_INTERFACE}
-ExecStopPost=wificonfig-check-connection ${WIFI_INTERFACE}
 RestartSec=5
 
 [Install]

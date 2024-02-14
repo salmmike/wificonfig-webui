@@ -15,9 +15,11 @@
             height: 100vh;
             background-color: #f0f0f0;
         }
+
         .message-container {
             text-align: center;
         }
+
         .message {
             font-size: 24px;
             font-weight: bold;
@@ -27,7 +29,37 @@
 </head>
 <body>
     <div class="message-container">
-        <p class="message">Connecting to the network...</p>
+        <p class="message" id="status">Connecting to the network...</p>
     </div>
+
+    <script>
+        function checkNetworkStatus() {
+            // Send an AJAX request to the Python server
+            fetch('/network_status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.connecting_tried) {
+                    displayConnectedMessage();
+                } else {
+                    setTimeout(checkNetworkStatus, 1000); // Poll every 1 second
+                }
+            });
+        }
+
+        function displayConnectedMessage() {
+            fetch('/network_status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.connected) {
+                    document.getElementById('status').innerText = 'Connected to the network!';
+                } else {
+                    window.location.href = 'login'; // Change 'login.html' to your actual login page URL
+                }
+            });
+        }
+
+        // Start checking network status
+        checkNetworkStatus();
+    </script>
 </body>
 </html>

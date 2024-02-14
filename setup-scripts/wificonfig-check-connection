@@ -8,6 +8,7 @@ sleep 2
 systemctl enable ${SERVICE}
 systemctl start ${SERVICE}
 systemctl restart ${SERVICE}
+
 echo "restarting ${SERVICE}"
 sleep 10
 ping -c 2 google.com
@@ -19,8 +20,5 @@ fi
 
 systemctl disable ${SERVICE}
 systemctl stop ${SERVICE}
-
-systemctl restart wificonfigurator-accesspoint.service
-systemctl restart wificonfigurator-webui.service
 
 exit 1

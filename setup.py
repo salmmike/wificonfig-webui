@@ -4,7 +4,7 @@ setup(
     name="wificonfigui",
     version="0.0.2",
     packages=find_packages(include=["wificonfigui"]),
-    package_data={"templates": ["templates/login.html", "templates/login.html"]},
+    package_data={"templates": ["templates/login.html", "templates/connecting.html"]},
     include_package_data=True,
     zip_safe=False,
     install_requires=["Flask", "requests"],
